@@ -13,13 +13,27 @@ EXCUSE = (
 )
 
 
-def main():
-    assert 1 <= len(EXCUSE) <= 200, "excuse must be 1-200 characters"
-    assert EXCUSE.strip() == EXCUSE, "excuse must not be only whitespace"
+def write_entry(line: str) -> str:
+    """Validate the excuse and write it atomically to entry.txt.
+
+    The line goes to a temporary file in the same directory first,
+    then replaces the entry, so a reader never sees a half-written
+    line. Returns the entry path.
+    """
+    assert 1 <= len(line) <= 200, "excuse must be 1-200 characters"
+    assert line.strip() == line, "excuse must not be only whitespace"
     out = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     os.makedirs(out, exist_ok=True)
-    with open(os.path.join(out, "entry.txt"), "w", encoding="utf-8") as f:
-        f.write(EXCUSE)
+    path = os.path.join(out, "entry.txt")
+    tmp_path = path + ".tmp"
+    with open(tmp_path, "w", encoding="utf-8") as f:
+        f.write(line)
+    os.replace(tmp_path, path)
+    return path
+
+
+def main():
+    write_entry(EXCUSE)
 
 
 if __name__ == "__main__":
